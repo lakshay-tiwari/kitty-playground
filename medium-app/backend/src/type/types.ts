@@ -18,3 +18,7 @@ export interface UpdateUser{
   name?: string
   password?: string
 }
+
+export interface Prisma{
+  prisma: string
+}
