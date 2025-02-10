@@ -20,5 +20,11 @@ export interface UpdateUser{
 }
 
 export interface Prisma{
-  prisma: string
+  prisma: string,
+  userId: string
+}
+
+export interface UpdateBlog{
+  title?: string,
+  content?: string
 }

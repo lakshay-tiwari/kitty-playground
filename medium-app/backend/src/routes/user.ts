@@ -1,13 +1,18 @@
 import { Hono, Context } from "hono";
 import { sign } from 'hono/jwt';
-import { Signup , EnvBindings , Signin, UpdateUser } from "../type/types";
+import { Signup , Signin, UpdateUser } from "../type/types";
+import { PrismaClient } from '@prisma/client/edge';
+import { withAccelerate } from '@prisma/extension-accelerate';
 
-const userRoute = new Hono<{ Bindings: EnvBindings }>();
+const userRoute = new Hono();
 
 
 // signup route
 userRoute.post('/signup',async function(c:Context){
-  const prisma = c.get('prisma');
+
+  const prisma = new PrismaClient({
+    datasourceUrl : c.env.DATABASE_URL
+  }).$extends(withAccelerate());
   
   const body: Signup = await c.req.json();
 
@@ -51,7 +56,9 @@ userRoute.post('/signup',async function(c:Context){
 // signin route
 userRoute.post('/signin',async function(c:Context){
 
-  const prisma = c.get('prisma');
+  const prisma = new PrismaClient({
+    datasourceUrl : c.env.DATABASE_URL
+  }).$extends(withAccelerate());
 
   const body:Signin = await c.req.json();
   try {
@@ -91,7 +98,9 @@ userRoute.put('/update/:id', async function(c:Context){
   const userId = c.req.param('id')
   const body:UpdateUser = await c.req.json();
 
-  const prisma = c.get('prisma');
+  const prisma = new PrismaClient({
+    datasourceUrl : c.env.DATABASE_URL
+  }).$extends(withAccelerate());
 
   try {
     const findUser = await prisma.user.findUnique({
