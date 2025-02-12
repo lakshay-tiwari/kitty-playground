@@ -1,9 +1,30 @@
-import { Hono, Context } from "hono";
+import { Hono, Context , Next } from "hono";
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { UpdateBlog } from "../type/types";
-
+import { verify } from 'hono/jwt';
 const blogRoute = new Hono();
+
+//middleware
+const jwtMiddleware = async (c:Context, next: Next) => {
+  const authHeader = c.req.header('authorization') || ''
+  const token = authHeader.split(' ')[1]
+
+  if (!token) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const payload = await verify(token, c.env.JWT_SECRET);
+    c.set('jwtPayload', payload) 
+    await next() 
+  } catch (err) {
+    return c.json({ error: 'Invalid token' }, 403)
+  }
+}
+
+blogRoute.use("/auth/*", jwtMiddleware);
+
 
 
 // route for getting sepecific blog
@@ -18,14 +39,11 @@ blogRoute.get('/:id',async function(c:Context){
   try {
     const blog = await prisma.post.findUnique({ where: {id: blogId } });
     if (blog === null){
-      c.status(404);
-      return c.json({message: "Blog not found"});
+      return c.json({message: "Blog not found"}, 404);
     }
-    c.status(200);
-    return c.json({ message : "Blog fetched Successfully!", blog});
+    return c.json({ message : "Blog fetched Successfully!", blog}, 200);
   } catch (error) {
-    c.status(500);
-    return c.json({message: "Something error occurs"});
+    return c.json({message: "Something error occurs"},500);
   }
 
 })
@@ -40,25 +58,22 @@ blogRoute.get('/bulk',async function(c:Context){
   try {
     const blogList = await prisma.post.findMany();
     if (blogList.length === 0) {
-      c.status(404);
-      return c.json({message: "No Blog found"});
+      return c.json({message: "No Blog found"},404);
     }
-    c.status(200);
-    return c.json({message: "All Post fetched successfully", blogList});
+    return c.json({message: "All Post fetched successfully", blogList},200);
   } catch (error) {
-    c.status(500);
-    return c.json({message: "Something error occurs"});
+    return c.json({message: "Something error occurs"},500);
   }
 })
 
 // route to update blog for given blogId
-blogRoute.put('/update/:blogId',async function(c:Context){
+blogRoute.put('/auth/update/:blogId',async function(c:Context){
 
   const prisma = new PrismaClient({
     datasourceUrl : c.env.DATABASE_URL
   }).$extends(withAccelerate());
 
-  const authorId = c.get('userId');
+  const authorId = c.get('jwtPayload');
   const blogId = c.req.param('blogId');
   const body:UpdateBlog = await c.req.json();
 
@@ -67,33 +82,29 @@ blogRoute.put('/update/:blogId',async function(c:Context){
       where: { id: blogId},
       data: body
     })
-    c.status(200);
-    return c.json({message: "Blog Updated Successfully", updateBlog});
+    return c.json({message: "Blog Updated Successfully", updateBlog},200);
   } catch (error) {
-    c.status(500);
-    return c.json({message: "Something Error Occurs"});
+    return c.json({message: "Something Error Occurs"},500);
   }
 })
 
 
 // route to post a blog 
-blogRoute.post('/post',async function(c:Context){
+blogRoute.post('/auth/post',async function(c:Context){
 
   const prisma = new PrismaClient({
     datasourceUrl : c.env.DATABASE_URL
   }).$extends(withAccelerate()); 
 
   const { title , content } = await c.req.json();
-  const authorId = c.get('userId');
+  const authorId = c.get('jwtPayload');
   try {
     const addPost = await prisma.post.create({
       data: { title , content , authorId }
     });
-    c.status(201);
-    return c.json({message: "Post Added Successfully", addPost});
+    return c.json({message: "Post Added Successfully", addPost},201);
   } catch (error) {
-    c.status(500);
-    return c.json({message: "Something error occurs"});
+    return c.json({message: "Something error occurs"},500);
   }
 })
 

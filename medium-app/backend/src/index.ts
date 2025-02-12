@@ -1,7 +1,5 @@
 import { Hono , Context } from "hono";
 import { cors } from 'hono/cors';
-import { PrismaClient } from '@prisma/client/edge';
-import { withAccelerate } from '@prisma/extension-accelerate';
 import userRoute from "./routes/user";
 import blogRoute from "./routes/blog";
 import { EnvBindings } from "./type/types";
