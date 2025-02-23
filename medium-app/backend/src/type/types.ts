@@ -19,11 +19,6 @@ export interface UpdateUser{
   password?: string
 }
 
-export interface Prisma{
-  prisma: string,
-  userId: string
-}
-
 export interface UpdateBlog{
   title?: string,
   content?: string

@@ -3,9 +3,7 @@ import { cors } from 'hono/cors';
 import userRoute from "./routes/user";
 import blogRoute from "./routes/blog";
 import { EnvBindings } from "./type/types";
-import { Prisma } from "./type/types";
-
-const app = new Hono<{ Bindings: EnvBindings, Variables :Prisma }>();
+const app = new Hono<{Bindings: EnvBindings}>();
 
 app.use(cors());
 

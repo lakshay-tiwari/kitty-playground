@@ -40,7 +40,6 @@ userRoute.post('/signup',async function(c:Context){
     const id = addUser.id;
     const JWT_SECRET = c.env.JWT_SECRET;
     const token = await sign({id}, JWT_SECRET);
-
     c.status(201);
     return c.json({msg: "User Added" , token});
   }catch(error){
@@ -94,10 +93,10 @@ userRoute.post('/signin',async function(c:Context){
 
 //update password or name
 userRoute.put('/update/:id', async function(c:Context){
-  
+
   const userId = c.req.param('id')
   const body:UpdateUser = await c.req.json();
-
+  
   const prisma = new PrismaClient({
     datasourceUrl : c.env.DATABASE_URL
   }).$extends(withAccelerate());
@@ -118,6 +117,9 @@ userRoute.put('/update/:id', async function(c:Context){
       where: { id: findUser.id}, 
       data : body
     })
+
+    c.status(200);
+    return c.json({message: "User updated Successfully"});
   } catch (error) {
     c.status(500);
     return c.json({message: "Something Error Occurs"});
