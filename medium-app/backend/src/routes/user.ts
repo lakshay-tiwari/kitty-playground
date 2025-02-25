@@ -3,9 +3,19 @@ import { sign } from 'hono/jwt';
 import { Signup , Signin, UpdateUser } from "../type/types";
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
-
+import { z } from "zod";
 const userRoute = new Hono();
 
+const signupSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  password: z.string()
+})
+
+const signinSchema = z.object({
+  email: z.string(),
+  password: z.string()
+})
 
 // signup route
 userRoute.post('/signup',async function(c:Context){
@@ -15,6 +25,12 @@ userRoute.post('/signup',async function(c:Context){
   }).$extends(withAccelerate());
   
   const body: Signup = await c.req.json();
+
+  const { success } = signupSchema.safeParse(body);
+
+  if (!success){
+    return c.json({message: "Invalid"}, 401);
+  }
 
   try{
 
@@ -60,6 +76,13 @@ userRoute.post('/signin',async function(c:Context){
   }).$extends(withAccelerate());
 
   const body:Signin = await c.req.json();
+
+  const { success } = signinSchema.safeParse(body);
+
+  if (!success){
+    return c.json({message: "Invalid"}, 401);
+  }
+
   try {
     const findUser = await prisma.user.findUnique({
       where: {
