@@ -31,11 +31,36 @@ blogRoute.get('/bulk',async function(c:Context){
   }).$extends(withAccelerate());
 
   try {
-    const blogList = await prisma.post.findMany();
-    if (blogList.length === 0) {
+    const blogs = await prisma.post.findMany({
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        created_at: true,
+        author: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+
+    let size:number = blogs.length ;
+
+    if (size === 0) {
       return c.json({message: "No Blog found"},404);
     }
-    return c.json({message: "All Post fetched successfully", blogList},200);
+
+    // function to reverse array
+    let i = 0 , j = size - 1 ;    
+
+    while(i < j){
+      [blogs[i], blogs[j]] = [blogs[j], blogs[i]];
+      i++;
+      j--;
+    }
+
+    return c.json({message: "All Post fetched successfully", blogs},200);
   } catch (error) {
     return c.json({message: "Something error occurs"},500);
   }
@@ -52,7 +77,20 @@ blogRoute.get('/:id',async function(c:Context){
   const blogId = c.req.param('id');
 
   try {
-    const blog = await prisma.post.findUnique({ where: {id: blogId } });
+    const blog = await prisma.post.findUnique({ 
+      where: { id: blogId },
+      select: {
+        id: true,
+        title: true, 
+        content: true,
+        created_at: true,
+        author: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
     if (blog === null){
       return c.json({message: "Blog not found"}, 404);
     }
