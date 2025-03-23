@@ -7,7 +7,7 @@ export function Blogs(){
   
   const {loading, blogs , message } = useBlogs();
 
-  if (loading == true || false){
+  if (loading == true){
     return (
       <div>
         <AppBar />    
