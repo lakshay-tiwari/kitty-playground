@@ -1,5 +1,5 @@
 import { Hono, Context } from "hono";
-import { sign } from 'hono/jwt';
+import { sign , verify } from 'hono/jwt';
 import { Signup , Signin, UpdateUser } from "../type/types";
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
@@ -111,6 +111,22 @@ userRoute.post('/signin',async function(c:Context){
     c.status(500);
     return c.json({message: "Something Error Occurs"});
   }
+})
+
+
+// route to know isLogged by jwt
+userRoute.get('/me', async function(c:Context) {
+  console.log('hi')
+  const token: string =  await c.req.header('Authorization') || "";
+  const jwtToken:string = (token.split(' ').length == 2)? token.split(' ')[1] : "" ;
+  
+  try {
+    const decode = await verify(jwtToken , c.env.JWT_SECRET);
+    return c.json({'isLogged': true }, 201);
+  } catch (error) {
+    return c.json({'isLogged': false}, 404);
+  }
+  
 })
 
 
