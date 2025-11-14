@@ -3,9 +3,11 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import todoReducer from '../features/todoStorefunc'
 import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
+import { todoApi } from '../features/getFromApi'
 
 const rootReducer = combineReducers({
   todo: todoReducer, // <-- keep this clean array reducer
+  [todoApi.reducerPath]: todoApi.reducer
 })
 
 const persistConfig = {
@@ -21,7 +23,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).concat(todoApi.middleware),
 })
 
 export const persistor = persistStore(store)
