@@ -3,9 +3,12 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import todoReducer from '../features/todoStorefunc'
 import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
+import  todoApi  from '../features/fetchTodos.slice'
+
 
 const rootReducer = combineReducers({
-  todo: todoReducer, // <-- keep this clean array reducer
+  todo: todoReducer, // <-- keep this clean array reducer,
+  todos : todoApi
 })
 
 const persistConfig = {
